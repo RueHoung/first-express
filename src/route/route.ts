@@ -1,7 +1,7 @@
 import { Express } from "express";
 import express from "express";
 import type { Request, Response } from 'express';
-import { JwtPayload, token } from '../core/jwt.js'
+import { AccessPayload, accessToken, refreshToken, refresh } from '../core/jwt.js'
 
 
 export const route = (app: Express) => {
@@ -16,11 +16,23 @@ export const route = (app: Express) => {
     // JWT Sign
     app.post(
         "/sign", (req: Request, res: Response) =>{
-            console.log(req.body);
-            const payload: JwtPayload = req.body
-            const accessToken = token(payload)
+            const payload: AccessPayload = req.body
+            const access_token = accessToken(payload)
+            const refresh_token = refreshToken()
             res.json({
-                accessToken
+                access_token,
+                refresh_token
+            });
+        }
+    )
+
+    // JWT Sign
+    app.post(
+        "/refresh", (req: Request, res: Response) =>{
+            const payload: string = req.body.token
+            const new_access_token = refresh(payload)
+            res.json({
+                new_access_token
             });
         }
     )

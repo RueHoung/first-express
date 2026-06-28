@@ -1,6 +1,8 @@
 export const env = {
-    jwtSecret: requireEnv('JWT'),
-    expires: requireEnv('EXPIRES'),
+    jwtAccess: requireEnv('JWTACCESSToken'),
+    jwtRefresh: requireEnv('JWTREFRESHToken'),
+    accessExpires: requireEnv('ACCESSEXPIRES'),
+    refreshExpires: requireEnv('REFRESHEXPIRES'),
     port: Number(process.env.Port ?? 3000)
 }
 
