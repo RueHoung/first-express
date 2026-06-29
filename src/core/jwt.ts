@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { env } from './env.js'
 import type { StringValue } from "ms";
-import { strict } from 'assert';
+import logger from "./logger.js";
 
 type Role = 'admin' | 'manager' | 'user'
 
@@ -54,19 +54,18 @@ export const refreshToken = (): string => {
 export const refresh = (token: string): string => {
     try {
         const decode = jwt.verify(token, env.jwtRefresh)
-        console.log(decode)
-        if (decode && typeof(decode) === "object" && decode.type === "refresh") {
-            const accessPayload: AccessPayload = {
-                sub: 123, //預設使用者id為123
-                name: "Jeff",
-                role: "user",
-                type: "access"
-            }
-            return accessToken(accessPayload)
+        if (decode && typeof(decode) === 'object' && decode.type !== "refresh") {
+            return ""
         }
-        return ""
+        const accessPayload: AccessPayload = {
+            sub: 123, //預設使用者id為123
+            name: "Jeff",
+            role: "user",
+            type: "access"
+        }
+        return accessToken(accessPayload)
     } catch (err) {
-        console.log(err)
+        logger.error(err)
         return ""
     }
 }

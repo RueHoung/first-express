@@ -1,8 +1,12 @@
+import logger from "./logger.js";
+
 export const env = {
     jwtAccess: requireEnv('JWTACCESSToken'),
     jwtRefresh: requireEnv('JWTREFRESHToken'),
     accessExpires: requireEnv('ACCESSEXPIRES'),
     refreshExpires: requireEnv('REFRESHEXPIRES'),
+    mongoAccount: requireEnv('MONGOACCOUNT'),
+    mongoPassword: requireEnv('MONGOPASSWORD'),
     port: Number(process.env.Port ?? 3000)
 }
 
@@ -10,7 +14,9 @@ export const env = {
 function requireEnv(name: string): string {
     const value = process.env[name];
     if (!value) {
-        throw new Error(`Environment variable ${name} is required.`)
+        const err = `Environment variable ${name} is required.`
+        logger.error(err)
+        throw err
     }
     return value
 }

@@ -2,11 +2,11 @@ import { Express } from "express";
 import express from "express";
 import type { Request, Response } from 'express';
 import { AccessPayload, accessToken, refreshToken, refresh } from '../core/jwt.js'
+import logger from "../core/logger.js";
+
 
 
 export const route = (app: Express) => {
-    // Middleware
-    app.use(express.json());
 
     // 基礎路由
     app.get('/', (req: Request, res: Response) => {
@@ -26,7 +26,7 @@ export const route = (app: Express) => {
         }
     )
 
-    // JWT Sign
+    // JWT Refresh
     app.post(
         "/refresh", (req: Request, res: Response) =>{
             const payload: string = req.body.token
