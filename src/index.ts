@@ -3,7 +3,7 @@ import { env } from './core/env.js'
 import { route } from './route/route.js';
 import logger from "./core/logger.js";
 import { pinoHttp } from "pino-http";
-import { connectMongo } from "./core/db.js"
+import { connectMongo } from './core/db.js';
 
 
 const app = express();

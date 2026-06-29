@@ -1,6 +1,7 @@
 import { Express } from "express";
 import type { Request, Response } from 'express';
 import { AccessPayload, accessToken, refreshToken, refresh } from '../core/jwt.js'
+import { adminRoute } from "./admin.js";
 
 
 
@@ -34,4 +35,7 @@ export const route = (app: Express) => {
             });
         }
     )
+
+    // admin route
+    adminRoute(app)
 }

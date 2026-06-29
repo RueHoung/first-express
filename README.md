@@ -1,13 +1,14 @@
 # first-express
 
-使用 TypeScript 建立的 Express API 範例專案，目前包含 JWT access/refresh token 簽發、MongoDB Atlas 連線、pino HTTP request logger，以及集中式路由管理。
+使用 TypeScript 建立的 Express API 範例專案，目前包含 JWT access/refresh token 簽發、MongoDB Atlas 連線、pino HTTP request logger、集中式路由管理，以及 admin user 建立功能。
 
 ## 技術棧
 
 - Node.js 24.14.1
 - TypeScript
 - Express 5
-- MongoDB Node.js Driver
+- MongoDB Atlas / Mongoose
+- bcrypt
 - jsonwebtoken
 - pino / pino-http / pino-pretty
 - tsx
@@ -17,13 +18,24 @@
 ```text
 .
 ├── src
+│   ├── app
+│   │   └── admin
+│   │       ├── controller
+│   │       │   └── admin.ts  # admin API controller
+│   │       ├── dto
+│   │       │   └── admin.ts  # admin request payload 型別
+│   │       ├── model
+│   │       │   └── admin.ts  # Mongoose User schema/model
+│   │       └── service
+│   │           └── admin.ts  # admin business logic 與密碼 hash
 │   ├── core
-│   │   ├── db.ts        # MongoDB client 與連線檢查
+│   │   ├── db.ts        # Mongoose 連線設定
 │   │   ├── env.ts       # 讀取與驗證環境變數
 │   │   ├── jwt.ts       # JWT access/refresh token 產生與刷新
 │   │   ├── logger.ts    # pino logger 設定
 │   │   └── response.ts  # 統一成功/錯誤 response helper
 │   ├── route
+│   │   ├── admin.ts     # admin route
 │   │   └── route.ts     # API 路由集中管理
 │   └── index.ts         # Express app 入口、middleware、MongoDB 啟動流程
 ├── .env.dev             # 開發環境變數
@@ -57,6 +69,7 @@ NODE_ENV=development
 LOG_LEVEL=info
 MONGOACCOUNT=your-mongodb-account
 MONGOPASSWORD=your-mongodb-password
+DATABASE=your-database-name
 ```
 
 | 變數 | 說明 | 範例 |
@@ -70,6 +83,7 @@ MONGOPASSWORD=your-mongodb-password
 | `LOG_LEVEL` | pino log level，未設定時預設為 `info` | `info`, `debug`, `error` |
 | `MONGOACCOUNT` | MongoDB Atlas 帳號，必填 | `your-mongodb-account` |
 | `MONGOPASSWORD` | MongoDB Atlas 密碼，必填 | `your-mongodb-password` |
+| `DATABASE` | Mongoose 連線使用的 database name，必填 | `my-first-express` |
 
 `.env.*` 已被 `.gitignore` 忽略，請不要提交實際密鑰、資料庫帳號或密碼。
 
@@ -93,7 +107,7 @@ npm run prod
 2. 建立 Express app
 3. 註冊 `express.json()` 與 `pino-http`
 4. 註冊 API routes
-5. 連線 MongoDB Atlas 並執行 `ping`
+5. 透過 Mongoose 連線 MongoDB Atlas
 6. MongoDB 連線成功後啟動 HTTP server
 
 預設服務位址：
@@ -198,6 +212,60 @@ curl -X POST http://localhost:3000/refresh \
   -d '{"token":"jwt-refresh-token"}'
 ```
 
+### `POST /user`
+
+建立 admin user。密碼會先使用 `bcrypt` hash 後，再透過 Mongoose `User` model 寫入 MongoDB。
+
+Request body：
+
+```json
+{
+  "name": "Jeff",
+  "role": "admin",
+  "email": "jeff@example.com",
+  "password": "password123",
+  "birth": "1990-01-01",
+  "phone": "0912345678"
+}
+```
+
+Response：
+
+```json
+{
+  "success": true,
+  "data": "mongodb-document-id",
+  "msg": "Create Sucess"
+}
+```
+
+錯誤時會回傳：
+
+```json
+{
+  "success": false,
+  "msg": "error message"
+}
+```
+
+PowerShell 測試範例：
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:3000/user" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body '{"name":"Jeff","role":"admin","email":"jeff@example.com","password":"password123","birth":"1990-01-01","phone":"0912345678"}'
+```
+
+curl 測試範例：
+
+```bash
+curl -X POST http://localhost:3000/user \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Jeff","role":"admin","email":"jeff@example.com","password":"password123","birth":"1990-01-01","phone":"0912345678"}'
+```
+
 ## npm scripts
 
 | 指令 | 說明 |
@@ -212,5 +280,6 @@ curl -X POST http://localhost:3000/refresh \
 - JWT 使用 `HS256` 演算法簽發。
 - 目前 token 內的 `sub` 暫時在 `src/core/jwt.ts` 固定為 `123`，`/refresh` 產生的新 access token 也暫時使用固定的 `name` 與 `role`。
 - `src/core/logger.ts` 會依 `NODE_ENV` 決定是否使用 `pino-pretty`。
-- `src/core/db.ts` 會在 app 啟動時連線 MongoDB Atlas，連線失敗會記錄 fatal log 並停止啟動。
-- `src/core/response.ts` 提供 `Ok` 與 `Error` helper，可用於後續 API 統一 response 格式。
+- `src/core/db.ts` 會在 app 啟動時透過 Mongoose 連線 MongoDB Atlas，連線失敗會記錄 fatal log 並停止啟動。
+- `src/core/response.ts` 提供 `Success`、`create`、`ErrorRes` 與 `getErrorMessage` helper，可用於後續 API 統一 response 格式。
+- `src/app/admin/service/admin.ts` 建立 user 前會使用 `bcrypt`，目前 salt rounds 設定為 `12`。

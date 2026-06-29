@@ -7,6 +7,7 @@ export const env = {
     refreshExpires: requireEnv('REFRESHEXPIRES'),
     mongoAccount: requireEnv('MONGOACCOUNT'),
     mongoPassword: requireEnv('MONGOPASSWORD'),
+    mongoDatabase: requireEnv('DATABASE'),
     port: Number(process.env.Port ?? 3000)
 }
 
