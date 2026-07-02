@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { isAppError } from "./AppError.js";
 
 interface errorPayload {
     success: boolean
@@ -53,6 +54,20 @@ export const ErrorRes = (
     return res.status(statusCode).json(payload)
 }
 
+export class ApiError extends Error{
+    statusCode: number
+
+    constructor(statuscode: number, message: string){
+        super(message)
+        this.statusCode = statuscode
+        this.name = "AppError"
+    }
+}
+
 export const getErrorMessage = (err: unknown): string => {
     return err instanceof Error ? err.message : "Unknown error"
+}
+
+export const getErrorStatusCode = (err: unknown): number => {
+    return isAppError(err) ? err.statusCode : 500
 }
